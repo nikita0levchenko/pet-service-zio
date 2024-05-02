@@ -1,0 +1,25 @@
+package com.nlevchenko.sccZioApp.domain.actor
+
+import com.nlevchenko.sccZioApp.repository.Repository
+import io.circe.Encoder
+import org.http4s._
+import org.http4s.circe._
+import org.http4s.dsl.Http4sDsl
+import zio._
+import zio.interop.catz._
+
+object ActorApi {
+  def routes[R <: Has[Repository]]: HttpRoutes[RIO[R, *]] = {
+    type Task[A] = RIO[R, A]
+
+    val dsl: Http4sDsl[Task] = Http4sDsl[Task]
+    import dsl._
+
+    implicit def circeJsonEncoder[A: Encoder]: EntityEncoder[Task, A] = jsonEncoderOf[Task, A]
+
+    HttpRoutes.of[Task] { case GET -> Root =>
+      Ok(Repository.getActors)
+    }
+  }
+
+}
